@@ -5,33 +5,27 @@ CC       = $(TOOLPATH)gocc1 -I ./z_tools/haribote/ -Os -Wall
 
 default: img
 
-asmhead.bin: asmhead.nas
-	$(NASK) $< $@ asmhead.lst
+%.bin: %.nas
+	$(NASK) $< $@ $*.lst
 
-bootpack.gas: bootpack.c bootpack.h
+%.gas: %.c
 	$(CC) $< -o $@
 
-bootpack.nas: bootpack.gas
+%.nas: %.gas
 	$(TOOLPATH)gas2nask $< $@
-
-bootpack.obj: bootpack.nas
-	$(NASK) $< $@ bootpack.lst
-
-naskfunc.obj: naskfunc.nas
-	$(NASK) $< $@ naskfunc.lst
 
 hankaku.obj: hankaku.txt
 	$(TOOLPATH)makefont $< hankaku.bin
 	$(TOOLPATH)bin2obj hankaku.bin $@ _hankaku
 
-bootpack.bim: bootpack.obj naskfunc.obj hankaku.obj
+%.obj: %.nas
+	$(NASK) $< $@ $*.lst
+
+bootpack.bim: bootpack.obj graphic.obj naskfunc.obj hankaku.obj
 	$(TOOLPATH)obj2bim @$(TOOLPATH)haribote/haribote.rul out:bootpack.bim stack:3136k map:bootpack.map $^
 
-bootpack.hrb: bootpack.bim
-	$(TOOLPATH)bim2hrb bootpack.bim bootpack.hrb 0
-
-ipl.bin: ipl.nas
-	$(NASK) ipl.nas ipl.bin ipl.lst
+%.hrb: %.bim
+	$(TOOLPATH)bim2hrb $< $@ 0
 
 haribote.img: haribote.sys ipl.bin
 	$(EDIMG)   imgin:./z_tools/fdimg0at.tek \
