@@ -1,7 +1,7 @@
 TOOLPATH = ../z_tools/
 NASK     = $(TOOLPATH)nask
 EDIMG    = $(TOOLPATH)edimg
-CC       = $(TOOLPATH)gocc1
+CC       = $(TOOLPATH)gocc1 -I ../z_tools/haribote/ -Os -Wall
 
 default: img
 
