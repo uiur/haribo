@@ -38,3 +38,9 @@
 *.lst
 *.bin
 *.sys
+
+src/*.gas
+src/*.bim
+src/*.hrb
+src/*.map
+src/bootpack.nas
