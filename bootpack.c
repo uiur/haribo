@@ -2,13 +2,17 @@
 
 void HariMain(void)
 {
-  struct BOOTINFO *binfo;
-  binfo = (struct BOOTINFO *)0x0ff0;
+  struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
+
+  init_gdtidt();
+  init_pic();
+  io_sti();
 
   init_palette();
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
 
-  putfonts8_asc(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, "hello");
+  io_out8(PIC0_IMR, 0xf9);
+  io_out8(PIC1_IMR, 0xef);
 
   for (;;) {
     io_hlt();
