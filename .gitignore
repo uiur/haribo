@@ -39,8 +39,8 @@
 *.bin
 *.sys
 
-src/*.gas
-src/*.bim
-src/*.hrb
-src/*.map
-src/bootpack.nas
+*.gas
+*.bim
+*.hrb
+*.map
+bootpack.nas

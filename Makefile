@@ -1,7 +1,7 @@
-TOOLPATH = ../z_tools/
+TOOLPATH = ./z_tools/
 NASK     = $(TOOLPATH)nask
 EDIMG    = $(TOOLPATH)edimg
-CC       = $(TOOLPATH)gocc1 -I ../z_tools/haribote/ -Os -Wall
+CC       = $(TOOLPATH)gocc1 -I ./z_tools/haribote/ -Os -Wall
 
 default: img
 
@@ -30,7 +30,7 @@ ipl.bin: ipl.nas
 	$(NASK) ipl.nas ipl.bin ipl.lst
 
 haribote.img: haribote.sys ipl.bin
-	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
+	$(EDIMG)   imgin:./z_tools/fdimg0at.tek \
 		wbinimg src:ipl.bin len:512 from:0 to:0\
 		copy from:haribote.sys to:@: \
 		imgout:haribote.img
@@ -44,6 +44,3 @@ img: haribote.img
 
 run: img
 	qemu-system-i386 -fda haribote.img
-
-clean:
-	rm bootpack.{map,nas,bim,hrb,gas}
