@@ -25,17 +25,30 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 #define COL8_008484		14
 #define COL8_848484		15
 
+struct BOOTINFO {
+  char cyls, leds, vmode, reserve;
+  short scrnx, scrny;
+  char *vram;
+};
+
 void HariMain(void)
 {
-  char *p;
+
+  char *vram;
+  int xsize, ysize;
+  struct BOOTINFO *binfo;
+  binfo = (struct BOOTINFO *)0x0ff0;
 
   init_palette();
 
-  p = (char *) 0xa0000;
 
-  boxfill8(p, 320, COL8_FF0000, 20, 20, 120, 120);
-  boxfill8(p, 320, COL8_00FF00, 40, 40, 140, 140);
-  boxfill8(p, 320, COL8_0000FF, 60, 60, 160, 160);
+  xsize = binfo->scrnx;
+  ysize = binfo->scrny;
+  vram = binfo->vram;
+
+  boxfill8(vram, xsize, COL8_FF0000, 20, 20, 120, 120);
+  boxfill8(vram, xsize, COL8_00FF00, 40, 40, 140, 140);
+  boxfill8(vram, xsize, COL8_0000FF, 60, 60, 160, 160);
 
   for (;;) {
     io_hlt();
