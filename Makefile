@@ -8,7 +8,7 @@ default: img
 asmhead.bin: asmhead.nas
 	$(NASK) $< $@ asmhead.lst
 
-bootpack.gas: bootpack.c
+bootpack.gas: bootpack.c bootpack.h
 	$(CC) $< -o $@
 
 bootpack.nas: bootpack.gas
