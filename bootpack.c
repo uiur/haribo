@@ -33,22 +33,14 @@ struct BOOTINFO {
 
 void HariMain(void)
 {
-
-  char *vram;
-  int xsize, ysize;
   struct BOOTINFO *binfo;
   binfo = (struct BOOTINFO *)0x0ff0;
 
   init_palette();
 
-
-  xsize = binfo->scrnx;
-  ysize = binfo->scrny;
-  vram = binfo->vram;
-
-  boxfill8(vram, xsize, COL8_FF0000, 20, 20, 120, 120);
-  boxfill8(vram, xsize, COL8_00FF00, 40, 40, 140, 140);
-  boxfill8(vram, xsize, COL8_0000FF, 60, 60, 160, 160);
+  boxfill8(binfo->vram, binfo->scrnx, COL8_FF0000, 20, 20, 120, 120);
+  boxfill8(binfo->vram, binfo->scrnx, COL8_00FF00, 40, 40, 140, 140);
+  boxfill8(binfo->vram, binfo->scrnx, COL8_0000FF, 60, 60, 160, 160);
 
   for (;;) {
     io_hlt();
