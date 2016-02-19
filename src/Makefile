@@ -9,16 +9,16 @@ asmhead.bin: asmhead.nas
 	$(NASK) asmhead.nas asmhead.bin asmhead.lst
 
 bootpack.gas: bootpack.c
-	$(CC) bootpack.c -o bootpack.gas
+	$(CC) $< -o $@
 
 bootpack.nas: bootpack.gas
-	$(TOOLPATH)gas2nask bootpack.gas bootpack.nas
+	$(TOOLPATH)gas2nask $< $@
 
 bootpack.obj: bootpack.nas
-	$(NASK) bootpack.nas bootpack.obj bootpack.lst
+	$(NASK) $< $@ bootpack.lst
 
 naskfunc.obj: naskfunc.nas
-	$(NASK) naskfunc.nas naskfunc.obj naskfunc.lst
+	$(NASK) $< $@ naskfunc.lst
 
 bootpack.bim: bootpack.obj naskfunc.obj
 	$(TOOLPATH)obj2bim @$(TOOLPATH)haribote/haribote.rul out:bootpack.bim stack:3136k map:bootpack.map bootpack.obj naskfunc.obj
