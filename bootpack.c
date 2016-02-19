@@ -5,8 +5,10 @@ int io_load_eflags(void);
 void io_store_eflags(int eflags);
 
 void init_palette(void);
+void init_screen(char *vram, int x, int y);
 void set_palette(int start, int end, unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
+void putfont8(char *vram, int xsize, int x, int y, char color, char *font);
 
 #define COL8_000000		0
 #define COL8_FF0000		1
@@ -36,11 +38,14 @@ void HariMain(void)
   struct BOOTINFO *binfo;
   binfo = (struct BOOTINFO *)0x0ff0;
 
-  init_palette();
+  static char font_A[16] = {
+		0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
+		0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
+	};
 
-  boxfill8(binfo->vram, binfo->scrnx, COL8_FF0000, 20, 20, 120, 120);
-  boxfill8(binfo->vram, binfo->scrnx, COL8_00FF00, 40, 40, 140, 140);
-  boxfill8(binfo->vram, binfo->scrnx, COL8_0000FF, 60, 60, 160, 160);
+  init_palette();
+  init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+  putfont8(binfo->vram, binfo->scrnx, 10, 10, COL8_FFFFFF, font_A);
 
   for (;;) {
     io_hlt();
@@ -73,6 +78,26 @@ void init_palette(void)
   return;
 }
 
+void init_screen(char *vram, int x, int y) {
+	boxfill8(vram, x, COL8_008484,  0,     0,      x -  1, y - 29);
+	boxfill8(vram, x, COL8_C6C6C6,  0,     y - 28, x -  1, y - 28);
+	boxfill8(vram, x, COL8_FFFFFF,  0,     y - 27, x -  1, y - 27);
+	boxfill8(vram, x, COL8_C6C6C6,  0,     y - 26, x -  1, y -  1);
+
+	boxfill8(vram, x, COL8_FFFFFF,  3,     y - 24, 59,     y - 24);
+	boxfill8(vram, x, COL8_FFFFFF,  2,     y - 24,  2,     y -  4);
+	boxfill8(vram, x, COL8_848484,  3,     y -  4, 59,     y -  4);
+	boxfill8(vram, x, COL8_848484, 59,     y - 23, 59,     y -  5);
+	boxfill8(vram, x, COL8_000000,  2,     y -  3, 59,     y -  3);
+	boxfill8(vram, x, COL8_000000, 60,     y - 24, 60,     y -  3);
+
+	boxfill8(vram, x, COL8_848484, x - 47, y - 24, x -  4, y - 24);
+	boxfill8(vram, x, COL8_848484, x - 47, y - 23, x - 47, y -  4);
+	boxfill8(vram, x, COL8_FFFFFF, x - 47, y -  3, x -  4, y -  3);
+	boxfill8(vram, x, COL8_FFFFFF, x -  3, y - 24, x -  3, y -  3);
+	return;
+}
+
 void set_palette(int start, int end, unsigned char *rgb)
 {
   int i, eflags;
@@ -98,6 +123,27 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
     for (x = x0; x <= x1; x++) {
       vram[xsize * y + x] = c;
     }
+  }
+
+  return;
+}
+
+void putfont8(char *vram, int xsize, int x, int y, char color, char *font) {
+  char *p, d;
+
+  int i;
+  for (i = 0; i < 16; i++) {
+    p = vram + (y + i) * xsize + x;
+    d = font[i];
+
+    if ((d & 0x80) != 0) { p[0] = color; }
+		if ((d & 0x40) != 0) { p[1] = color; }
+		if ((d & 0x20) != 0) { p[2] = color; }
+		if ((d & 0x10) != 0) { p[3] = color; }
+		if ((d & 0x08) != 0) { p[4] = color; }
+		if ((d & 0x04) != 0) { p[5] = color; }
+		if ((d & 0x02) != 0) { p[6] = color; }
+		if ((d & 0x01) != 0) { p[7] = color; }
   }
 
   return;
