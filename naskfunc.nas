@@ -3,7 +3,7 @@
 [BITS 32]
 
 [FILE "naskfunc.nas"]
-  GLOBAL _io_hlt, _io_cli, _io_sti, _io_stihlt, _io_in8, _io_in16, _io_in32, _io_out8, _io_out16, _io_out32, _io_load_eflags, _io_store_eflags
+  GLOBAL _io_hlt, _io_cli, _io_sti, _io_stihlt, _io_in8, _io_in16, _io_in32, _io_out8, _io_out16, _io_out32, _io_load_eflags, _io_store_eflags, _load_idtr, _load_gdtr
 
 [SECTION .text]
 
@@ -69,3 +69,15 @@ _io_store_eflags:
   PUSH EAX
   POPFD
   RET
+
+_load_gdtr:		; void load_gdtr(int limit, int addr);
+	MOV		AX,[ESP+4]		; limit
+	MOV		[ESP+6],AX
+	LGDT	[ESP+6]
+	RET
+
+_load_idtr:		; void load_idtr(int limit, int addr);
+	MOV		AX,[ESP+4]		; limit
+	MOV		[ESP+6],AX
+	LIDT	[ESP+6]
+	RET
