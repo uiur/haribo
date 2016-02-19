@@ -6,7 +6,7 @@ CC       = $(TOOLPATH)gocc1 -I ./z_tools/haribote/ -Os -Wall
 default: img
 
 asmhead.bin: asmhead.nas
-	$(NASK) asmhead.nas asmhead.bin asmhead.lst
+	$(NASK) $< $@ asmhead.lst
 
 bootpack.gas: bootpack.c
 	$(CC) $< -o $@
@@ -20,8 +20,12 @@ bootpack.obj: bootpack.nas
 naskfunc.obj: naskfunc.nas
 	$(NASK) $< $@ naskfunc.lst
 
-bootpack.bim: bootpack.obj naskfunc.obj
-	$(TOOLPATH)obj2bim @$(TOOLPATH)haribote/haribote.rul out:bootpack.bim stack:3136k map:bootpack.map bootpack.obj naskfunc.obj
+hankaku.obj: hankaku.txt
+	$(TOOLPATH)makefont $< hankaku.bin
+	$(TOOLPATH)bin2obj hankaku.bin $@ _hankaku
+
+bootpack.bim: bootpack.obj naskfunc.obj hankaku.obj
+	$(TOOLPATH)obj2bim @$(TOOLPATH)haribote/haribote.rul out:bootpack.bim stack:3136k map:bootpack.map $^
 
 bootpack.hrb: bootpack.bim
 	$(TOOLPATH)bim2hrb bootpack.bim bootpack.hrb 0
@@ -36,7 +40,7 @@ haribote.img: haribote.sys ipl.bin
 		imgout:haribote.img
 
 haribote.sys:	asmhead.bin bootpack.hrb
-	cat asmhead.bin bootpack.hrb > haribote.sys
+	cat $^ > $@
 
 asm: ipl.bin
 
