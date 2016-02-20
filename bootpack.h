@@ -118,3 +118,5 @@ void init_keyboard(void);
 /* mouse.c */
 void enable_mouse(struct MOUSE_DEC *mdec);
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char data);
+
+unsigned int memtest_sub(unsigned int start, unsigned int end);

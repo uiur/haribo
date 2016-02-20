@@ -4,6 +4,8 @@
 extern struct FIFO8 keyfifo;
 extern struct FIFO8 mousefifo;
 
+unsigned int memtest(unsigned int start, unsigned int end);
+
 struct MOUSE_DEC mdec;
 void HariMain(void) {
   struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
@@ -29,6 +31,10 @@ void HariMain(void) {
 	mx = binfo->scrnx / 2 - 4;
 	my = binfo->scrny / 2 - 8;
 	putfonts8_asc(binfo->vram, binfo->scrnx, mx, my, COL8_FFFFFF, "*");
+
+	i = memtest(0x00400000, 0xbfffffff) / (1024 * 1024);
+	sprintf(s, "memory %dMB", i);
+	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 48, COL8_FFFFFF, s);
 
   for (;;) {
     io_cli();
@@ -62,4 +68,38 @@ void HariMain(void) {
 	    }
 		}
   }
+}
+
+#define EFLAGS_AC_BIT 0x00040000
+#define CR0_CACHE_DISABLE 0x60000000
+
+unsigned int memtest(unsigned int start, unsigned int end) {
+	char flg486 = 0;
+	unsigned int eflg, cr0, i;
+
+	eflg = io_load_eflags();
+	eflg |= EFLAGS_AC_BIT;
+	io_store_eflags(eflg);
+
+	eflg = io_load_eflags();
+	if ((eflg & EFLAGS_AC_BIT) != 0) {
+		flg486 = 1;
+	}
+
+	eflg &= ~EFLAGS_AC_BIT;
+
+	if (flg486 != 0) {
+		cr0 = load_cr0();
+		cr0 |= CR0_CACHE_DISABLE;
+		store_cr0(cr0);
+	}
+
+	i = memtest_sub(start, end);
+	if (flg486 != 0) {
+		cr0 = load_cr0();
+		cr0 &= ~CR0_CACHE_DISABLE;
+		store_cr0(cr0);
+	}
+
+	return i;
 }
