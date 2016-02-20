@@ -82,3 +82,9 @@ void inthandler2c(int *esp);
 #define PIC1_ICW2		0x00a1
 #define PIC1_ICW3		0x00a1
 #define PIC1_ICW4		0x00a1
+
+#define PORT_KEYDAT		0x0060
+
+struct KEYBUF {
+	unsigned char data, flag;
+};
