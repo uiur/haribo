@@ -6,6 +6,7 @@ extern struct FIFO8 mousefifo;
 
 struct MOUSE_DEC {
 	unsigned char buf[3], phase;
+	int x, y, btn;
 };
 
 struct MOUSE_DEC mdec;
@@ -14,8 +15,7 @@ void init_keyboard(void);
 void enable_mouse(struct MOUSE_DEC *mdec);
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char data);
 
-void HariMain(void)
-{
+void HariMain(void) {
   struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
   int i;
   char s[40], keybuf[32], mousebuf[128];
@@ -53,9 +53,9 @@ void HariMain(void)
 	      io_sti();
 
 				if (mouse_decode(&mdec, i) > 0) {
-					sprintf(s, "%02X %02X %02X", mdec.buf[0], mdec.buf[1], mdec.buf[2]);
+					sprintf(s, "%d %4d %4d", mdec.btn, mdec.x, mdec.y);
 
-		      boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32 + 8 * 8 - 1, 31);
+		      boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32 + 8 * 12 - 1, 31);
 		      putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
 				}
 	    }
@@ -111,8 +111,10 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char data) {
 
 		return 0;
 	} else if (mdec->phase == 1) {
-		mdec->buf[0] = data;
-		mdec->phase++;
+		if ((data & 0xc8) == 0x08) {
+			mdec->buf[0] = data;
+			mdec->phase++;
+		}
 
 		return 0;
 	} else if (mdec->phase == 2) {
@@ -123,6 +125,21 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char data) {
 	} else if (mdec->phase == 3) {
 		mdec->buf[2] = data;
 		mdec->phase = 1;
+
+		mdec->btn = mdec->buf[0] & 0x07;
+		mdec->x = mdec->buf[1];
+		mdec->y = mdec->buf[2];
+
+		if ((mdec->buf[0] & 0x10) != 0) {
+			mdec->x |= 0xffffff00;
+		}
+
+		if ((mdec->buf[0] & 0x20) != 0) {
+			mdec->y |= 0xffffff00;
+		}
+
+		mdec->y *= -1;
+
 		return 1;
 	}
 
