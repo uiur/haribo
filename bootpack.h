@@ -36,8 +36,6 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 void putfont8(char *vram, int xsize, int x, int y, char color, char *font);
 void putfonts8_asc(char *vram, int xsize, int x, int y, char color, unsigned char *str);
 void wait_KBC_sendready(void);
-void init_keyboard(void);
-void enable_mouse(void);
 
 void asm_inthandler21(void);
 void asm_inthandler2c(void);
