@@ -6,21 +6,23 @@ extern struct FIFO8 keyfifo;
 void HariMain(void)
 {
   struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
+  int i;
+  char s[40], keybuf[32];
 
   init_gdtidt();
   init_pic();
   io_sti();
-
-  init_palette();
-  init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+  fifo8_init(&keyfifo, 32, keybuf);
 
   io_out8(PIC0_IMR, 0xf9);
   io_out8(PIC1_IMR, 0xef);
 
-  int i;
-  char s[40], keybuf[32];
+  init_keyboard();
 
-  fifo8_init(&keyfifo, 32, keybuf);
+  init_palette();
+  init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+
+  enable_mouse();
 
   for (;;) {
     io_cli();
@@ -37,28 +39,40 @@ void HariMain(void)
   }
 }
 
-void init_palette(void)
-{
-  static unsigned char table_rgb[16 * 3] = {
-		0x00, 0x00, 0x00,
-		0xff, 0x00, 0x00,
-		0x00, 0xff, 0x00,
-		0xff, 0xff, 0x00,
-		0x00, 0x00, 0xff,
-		0xff, 0x00, 0xff,
-		0x00, 0xff, 0xff,
-		0xff, 0xff, 0xff,
-		0xc6, 0xc6, 0xc6,
-		0x84, 0x00, 0x00,
-		0x00, 0x84, 0x00,
-		0x84, 0x84, 0x00,
-		0x00, 0x00, 0x84,
-		0x84, 0x00, 0x84,
-		0x00, 0x84, 0x84,
-		0x84, 0x84, 0x84
-	};
+#define PORT_KEYDAT				0x0060
+#define PORT_KEYSTA				0x0064
+#define PORT_KEYCMD				0x0064
+#define KEYSTA_SEND_NOTREADY	0x02
+#define KEYCMD_WRITE_MODE		0x60
+#define KBC_MODE				0x47
 
-  set_palette(0, 15, table_rgb);
+void wait_KBC_sendready(void) {
+  for (;;) {
+    if ((io_in8(PORT_KEYSTA) & KEYSTA_SEND_NOTREADY) == 0) {
+      break;
+    }
+  }
+
+  return;
+}
+
+void init_keyboard(void) {
+  wait_KBC_sendready();
+  io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE);
+  wait_KBC_sendready();
+  io_out8(PORT_KEYDAT, KBC_MODE);
+
+  return;
+}
+
+#define KEYCMD_SENDTO_MOUSE		0xd4
+#define MOUSECMD_ENABLE			0xf4
+
+void enable_mouse(void) {
+  wait_KBC_sendready();
+  io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
+  wait_KBC_sendready();
+  io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
 
   return;
 }

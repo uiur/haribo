@@ -24,7 +24,7 @@ haribote.sys:	asmhead.bin bootpack.hrb
 %.bin: %.nas
 	$(NASK) $< $@ $*.lst
 
-%.gas: %.c
+%.gas: %.c bootpack.h
 	$(CC) $< -o $@
 
 %.nas: %.gas

@@ -4,6 +4,8 @@ struct BOOTINFO {
   char *vram;
 };
 
+#define ADR_BOOTINFO  0x0ff0
+
 struct SEGMENT_DESCRIPTOR {
   short limit_low, base_low;
   char base_mid, access_right;
@@ -20,7 +22,7 @@ void io_hlt(void);
 void io_cli(void);
 void io_sti(void);
 void io_stihlt(void);
-void io_in8(int port);
+int io_in8(int port);
 void io_out8(int port, int data);
 int io_load_eflags(void);
 void io_store_eflags(int eflags);
@@ -33,9 +35,13 @@ void set_palette(int start, int end, unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void putfont8(char *vram, int xsize, int x, int y, char color, char *font);
 void putfonts8_asc(char *vram, int xsize, int x, int y, char color, unsigned char *str);
+void wait_KBC_sendready(void);
+void init_keyboard(void);
+void enable_mouse(void);
 
 void asm_inthandler21(void);
 void asm_inthandler2c(void);
+void asm_inthandler27(void);
 
 #define COL8_000000		0
 #define COL8_FF0000		1
@@ -54,8 +60,6 @@ void asm_inthandler2c(void);
 #define COL8_008484		14
 #define COL8_848484		15
 
-#define ADR_BOOTINFO  0x0ff0
-
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
 void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 void init_gdtidt(void);
@@ -73,6 +77,7 @@ void init_gdtidt(void);
 void init_pic(void);
 void inthandler21(int *esp);
 void inthandler2c(int *esp);
+void inthandler27(int *esp);
 #define PIC0_ICW1		0x0020
 #define PIC0_OCW2		0x0020
 #define PIC0_IMR		0x0021
@@ -86,8 +91,6 @@ void inthandler2c(int *esp);
 #define PIC1_ICW3		0x00a1
 #define PIC1_ICW4		0x00a1
 
-#define PORT_KEYDAT		0x0060
-
 /* fifo.c */
 struct FIFO8 {
   unsigned char *buf;
@@ -98,3 +101,5 @@ void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);
 int fifo8_put(struct FIFO8 *fifo, unsigned char data);
 int fifo8_get(struct FIFO8 *fifo);
 int fifo8_status(struct FIFO8 *fifo);
+
+#define PORT_KEYDAT				0x0060
