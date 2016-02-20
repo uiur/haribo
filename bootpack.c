@@ -1,6 +1,7 @@
+#include <stdio.h>
 #include "bootpack.h"
 
-extern struct KEYBUF keybuf;
+extern struct FIFO8 keyfifo;
 
 void HariMain(void)
 {
@@ -16,15 +17,18 @@ void HariMain(void)
   io_out8(PIC0_IMR, 0xf9);
   io_out8(PIC1_IMR, 0xef);
 
-  unsigned char i, s[4];
+  int i;
+  char s[40], keybuf[32];
+
+  fifo8_init(&keyfifo, 32, keybuf);
+
   for (;;) {
     io_cli();
 
-    if (keybuf.flag == 0) {
+    if (fifo8_status(&keyfifo) == 0) {
       io_stihlt();
     } else {
-      i = keybuf.data;
-      keybuf.flag = 0;
+      i = fifo8_get(&keyfifo);
       io_sti();
       sprintf(s, "%02X", i);
       boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);

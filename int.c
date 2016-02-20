@@ -23,18 +23,14 @@ void init_pic(void)
 	return;
 }
 
-struct KEYBUF keybuf;
+struct FIFO8 keyfifo;
 
 void inthandler21(int *esp) {
 	unsigned char data;
 	io_out8(PIC0_OCW2, 0x61);
 
 	data = io_in8(PORT_KEYDAT);
-
-	if (keybuf.flag == 0) {
-		keybuf.data = data;
-		keybuf.flag = 1;
-	}
+	fifo8_put(&keyfifo, data);
 
 	return;
 }

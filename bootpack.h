@@ -18,6 +18,9 @@ struct GATE_DESCRIPTOR {
 
 void io_hlt(void);
 void io_cli(void);
+void io_sti(void);
+void io_stihlt(void);
+void io_in8(int port);
 void io_out8(int port, int data);
 int io_load_eflags(void);
 void io_store_eflags(int eflags);
@@ -30,7 +33,6 @@ void set_palette(int start, int end, unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void putfont8(char *vram, int xsize, int x, int y, char color, char *font);
 void putfonts8_asc(char *vram, int xsize, int x, int y, char color, unsigned char *str);
-
 
 void asm_inthandler21(void);
 void asm_inthandler2c(void);
@@ -56,6 +58,7 @@ void asm_inthandler2c(void);
 
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
 void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
+void init_gdtidt(void);
 #define ADR_IDT			0x0026f800
 #define LIMIT_IDT		0x000007ff
 #define ADR_GDT			0x00270000
@@ -85,6 +88,13 @@ void inthandler2c(int *esp);
 
 #define PORT_KEYDAT		0x0060
 
-struct KEYBUF {
-	unsigned char data, flag;
+/* fifo.c */
+struct FIFO8 {
+  unsigned char *buf;
+  int p, q, size, free, flags;
 };
+
+void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);
+int fifo8_put(struct FIFO8 *fifo, unsigned char data);
+int fifo8_get(struct FIFO8 *fifo);
+int fifo8_status(struct FIFO8 *fifo);
