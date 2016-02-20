@@ -6,11 +6,17 @@ extern struct FIFO8 mousefifo;
 
 unsigned int memtest(unsigned int start, unsigned int end);
 
+#define MEMMAN_ADDR 0x003c0000;
+
 struct MOUSE_DEC mdec;
 void HariMain(void) {
   struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
+
   int i, mx, my;
   char s[40], keybuf[32], mousebuf[128];
+
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	unsigned int memtotal;
 
   init_gdtidt();
   init_pic();
@@ -23,18 +29,21 @@ void HariMain(void) {
 
   init_keyboard();
 
+	memtotal = memtest(0x00400000, 0xbfffffff);
+	memman_init(memman);
+	memman_free(memman, 0x00001000, 0x0009e000);
+	memman_free(memman, 0x00400000, memtotal - 0x00400000);
+
   init_palette();
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
-
   enable_mouse(&mdec);
 
 	mx = binfo->scrnx / 2 - 4;
 	my = binfo->scrny / 2 - 8;
 	putfonts8_asc(binfo->vram, binfo->scrnx, mx, my, COL8_FFFFFF, "*");
 
-	i = memtest(0x00400000, 0xbfffffff) / (1024 * 1024);
-	sprintf(s, "memory %dMB", i);
-	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 48, COL8_FFFFFF, s);
+	sprintf(s, "memory %dMB, free: %dKB", memtotal / (1024 * 1024), memman_total(memman) / 1024);
+	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 
   for (;;) {
     io_cli();
@@ -102,4 +111,106 @@ unsigned int memtest(unsigned int start, unsigned int end) {
 	}
 
 	return i;
+}
+
+void memman_init(struct MEMMAN *man) {
+	man->frees = 0;
+	man->maxfrees = 0;
+	man->lostsize = 0;
+	man->losts = 0;
+	return;
+}
+
+unsigned int memman_total(struct MEMMAN *man) {
+	unsigned int i, total = 0;
+
+	for (i = 0; i < man->frees; i++) {
+		total += man->free[i].size;
+	}
+
+	return total;
+}
+
+unsigned int memman_alloc(struct MEMMAN *man, unsigned int size) {
+	unsigned int i, a;
+	for (i = 0; i < man->frees; i++) {
+		if (man->free[i].size > size) {
+			a = man->free[i].addr;
+
+			man->free[i].addr += size;
+			man->free[i].size -= size;
+
+			if (man->free[i].size == 0) {
+				for (; i < man->frees; i++) {
+					man->free[i] = man->free[i+1];
+				}
+			}
+
+			return a;
+		}
+	}
+
+	return 0;
+}
+
+int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size) {
+	int i, j;
+	for (i = 0; i < man->frees; i++) {
+		if (man->free[i].addr > addr) {
+			break;
+		}
+	}
+
+	/* man->free[i-1].addr < addr < man->free[i].addr */
+	if (i > 0) {
+		struct FREEINFO *prev = &man->free[i-1];
+		if (prev->addr + prev->size == addr) {
+			prev->size += size;
+
+			if (i < man->frees) {
+				struct FREEINFO *next = &man->free[i];
+				if (addr + size == next->addr) {
+					prev->size += next->size;
+
+					man->frees--;
+					for (; i < man->frees; i++) {
+						man->free[i] = man->free[i+1];
+					}
+				}
+			}
+			return 0;
+		}
+	}
+
+	if (i < man->frees) {
+		struct FREEINFO *next = &man->free[i];
+		if (addr + size == next->addr) {
+			next->addr = addr;
+			next->size += size;
+
+			return 0;
+		}
+	}
+
+	if (man->frees < MEMMAN_FREES) {
+		for (j = man->frees; j > i; j--) {
+			man->free[j] = man->free[j-1];
+		}
+
+		man->frees++;
+
+		if (man->maxfrees < man->frees) {
+			man->maxfrees = man->frees;
+		}
+
+		man->free[i].addr = addr;
+		man->free[i].size = size;
+
+		return 0;
+	}
+
+	man->losts++;
+	man->lostsize += size;
+
+	return -1;
 }
