@@ -17,7 +17,7 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char data);
 
 void HariMain(void) {
   struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
-  int i;
+  int i, mx, my;
   char s[40], keybuf[32], mousebuf[128];
 
   init_gdtidt();
@@ -35,6 +35,10 @@ void HariMain(void) {
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
 
   enable_mouse(&mdec);
+
+	mx = binfo->scrnx / 2 - 4;
+	my = binfo->scrny / 2 - 8;
+	putfonts8_asc(binfo->vram, binfo->scrnx, mx, my, COL8_FFFFFF, "*");
 
   for (;;) {
     io_cli();
@@ -57,6 +61,13 @@ void HariMain(void) {
 
 		      boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32 + 8 * 12 - 1, 31);
 		      putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
+
+		      boxfill8(binfo->vram, binfo->scrnx, COL8_008484, mx, my, mx + 8 - 1, my + 16 - 1);
+
+					mx += mdec.x;
+					my += mdec.y;
+
+					putfonts8_asc(binfo->vram, binfo->scrnx, mx, my, COL8_FFFFFF, "*");
 				}
 	    }
 		}
