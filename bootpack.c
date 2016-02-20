@@ -4,17 +4,7 @@
 extern struct FIFO8 keyfifo;
 extern struct FIFO8 mousefifo;
 
-struct MOUSE_DEC {
-	unsigned char buf[3], phase;
-	int x, y, btn;
-};
-
 struct MOUSE_DEC mdec;
-
-void init_keyboard(void);
-void enable_mouse(struct MOUSE_DEC *mdec);
-int mouse_decode(struct MOUSE_DEC *mdec, unsigned char data);
-
 void HariMain(void) {
   struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
   int i, mx, my;
@@ -72,87 +62,4 @@ void HariMain(void) {
 	    }
 		}
   }
-}
-
-#define PORT_KEYDAT				0x0060
-#define PORT_KEYSTA				0x0064
-#define PORT_KEYCMD				0x0064
-#define KEYSTA_SEND_NOTREADY	0x02
-#define KEYCMD_WRITE_MODE		0x60
-#define KBC_MODE				0x47
-
-void wait_KBC_sendready(void) {
-  for (;;) {
-    if ((io_in8(PORT_KEYSTA) & KEYSTA_SEND_NOTREADY) == 0) {
-      break;
-    }
-  }
-
-  return;
-}
-
-void init_keyboard(void) {
-  wait_KBC_sendready();
-  io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE);
-  wait_KBC_sendready();
-  io_out8(PORT_KEYDAT, KBC_MODE);
-
-  return;
-}
-
-#define KEYCMD_SENDTO_MOUSE		0xd4
-#define MOUSECMD_ENABLE			0xf4
-
-void enable_mouse(struct MOUSE_DEC *mdec) {
-  wait_KBC_sendready();
-  io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
-  wait_KBC_sendready();
-  io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
-
-	mdec->phase = 0;
-
-  return;
-}
-
-int mouse_decode(struct MOUSE_DEC *mdec, unsigned char data) {
-	if (mdec->phase == 0) {
-		if (data == 0xfa) {
-			mdec->phase++;
-		}
-
-		return 0;
-	} else if (mdec->phase == 1) {
-		if ((data & 0xc8) == 0x08) {
-			mdec->buf[0] = data;
-			mdec->phase++;
-		}
-
-		return 0;
-	} else if (mdec->phase == 2) {
-		mdec->buf[1] = data;
-		mdec->phase++;
-
-		return 0;
-	} else if (mdec->phase == 3) {
-		mdec->buf[2] = data;
-		mdec->phase = 1;
-
-		mdec->btn = mdec->buf[0] & 0x07;
-		mdec->x = mdec->buf[1];
-		mdec->y = mdec->buf[2];
-
-		if ((mdec->buf[0] & 0x10) != 0) {
-			mdec->x |= 0xffffff00;
-		}
-
-		if ((mdec->buf[0] & 0x20) != 0) {
-			mdec->y |= 0xffffff00;
-		}
-
-		mdec->y *= -1;
-
-		return 1;
-	}
-
-	return -1;
 }
