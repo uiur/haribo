@@ -39,6 +39,7 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char color,
                    unsigned char *str);
 void wait_KBC_sendready(void);
 void init_mouse_cursor8(char *mouse, char bc);
+void make_window8(unsigned char *buf, int xsize, int ysize, char *title);
 
 void asm_inthandler21(void);
 void asm_inthandler2c(void);

@@ -17,8 +17,8 @@ void HariMain(void) {
   unsigned int memtotal;
 
   struct SHTCTL *shtctl;
-  struct SHEET *sht_back, *sht_mouse;
-  unsigned char *buf_back, buf_mouse[256];
+  struct SHEET *sht_back, *sht_mouse, *sht_win;
+  unsigned char *buf_back, buf_mouse[256], *buf_win;
 
   init_gdtidt();
   init_pic();
@@ -57,8 +57,16 @@ void HariMain(void) {
   my = (binfo->scrny - 28 - 16) / 2;
   sheet_slide(sht_mouse, mx, my);
 
+  buf_win = (unsigned char *)memman_alloc_4k(memman, 100 * 100);
+  make_window8(buf_win, 100, 100, "hello");
+
+  sht_win = sheet_alloc(shtctl);
+  sheet_setbuf(sht_win, buf_win, 100, 100, -1);
+  sheet_slide(sht_win, 40, 40);
+
   sheet_updown(sht_back, 0);
-  sheet_updown(sht_mouse, 1);
+  sheet_updown(sht_win, 1);
+  sheet_updown(sht_mouse, 2);
 
   sprintf(s, "memory %dMB, free: %dKB, %d %d", memtotal / (1024 * 1024),
           memman_total(memman) / 1024, sht_mouse->flags, sht_back->flags);
