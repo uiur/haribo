@@ -38,6 +38,7 @@ void putfont8(char *vram, int xsize, int x, int y, char color, char *font);
 void putfonts8_asc(char *vram, int xsize, int x, int y, char color,
                    unsigned char *str);
 void wait_KBC_sendready(void);
+void init_mouse_cursor8(char *mouse, char bc);
 
 void asm_inthandler21(void);
 void asm_inthandler2c(void);
@@ -141,4 +142,15 @@ unsigned int memtest(unsigned int start, unsigned int end);
 void memman_init(struct MEMMAN *man);
 unsigned int memman_total(struct MEMMAN *man);
 unsigned int memman_alloc(struct MEMMAN *man, unsigned int size);
+unsigned int memman_alloc_4k(struct MEMMAN *man, unsigned int size);
 int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size);
+int memman_free_4k(struct MEMMAN *man, unsigned int addr, unsigned int size);
+
+struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram,
+                           int xsize, int ysize);
+struct SHEET *sheet_alloc(struct SHTCTL *ctl);
+void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize,
+                  int col_inv);
+void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0);
+void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height);
+void sheet_refresh(struct SHTCTL *ctl);

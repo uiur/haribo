@@ -9,7 +9,7 @@ hankaku.obj: hankaku.txt
 	$(TOOLPATH)makefont $< hankaku.bin
 	$(TOOLPATH)bin2obj hankaku.bin $@ _hankaku
 
-bootpack.bim: bootpack.obj graphic.obj dsctbl.obj naskfunc.obj hankaku.obj int.obj fifo.obj keyboard.obj mouse.obj memory.obj
+bootpack.bim: bootpack.obj graphic.obj dsctbl.obj naskfunc.obj hankaku.obj int.obj fifo.obj keyboard.obj mouse.obj memory.obj sheet.obj
 	$(TOOLPATH)obj2bim @$(TOOLPATH)haribote/haribote.rul out:bootpack.bim stack:3136k map:bootpack.map $^
 
 haribote.img: haribote.sys ipl.bin
