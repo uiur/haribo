@@ -1,8 +1,8 @@
 #include "bootpack.h"
 
 void init_gdtidt(void) {
-  struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) 0x00270000;
-  struct GATE_DESCRIPTOR    *idt = (struct GATE_DESCRIPTOR    *) 0x0026f800;
+  struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *)0x00270000;
+  struct GATE_DESCRIPTOR *idt = (struct GATE_DESCRIPTOR *)0x0026f800;
 
   int i;
   for (i = 0; i < 8192; i++) {
@@ -18,14 +18,15 @@ void init_gdtidt(void) {
   }
   load_idtr(0x7ff, 0x0026f800);
 
-  set_gatedesc(idt + 0x21, (int) asm_inthandler21, 2 << 3, AR_INTGATE32);
-  set_gatedesc(idt + 0x2c, (int) asm_inthandler2c, 2 << 3, AR_INTGATE32);
-  set_gatedesc(idt + 0x27, (int) asm_inthandler27, 2 << 3, AR_INTGATE32);
+  set_gatedesc(idt + 0x21, (int)asm_inthandler21, 2 << 3, AR_INTGATE32);
+  set_gatedesc(idt + 0x2c, (int)asm_inthandler2c, 2 << 3, AR_INTGATE32);
+  set_gatedesc(idt + 0x27, (int)asm_inthandler27, 2 << 3, AR_INTGATE32);
 
   return;
 }
 
-void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar) {
+void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base,
+                  int ar) {
   if (limit > 0xfffff) {
     ar |= 0x8000;
     limit /= 0x1000;
@@ -41,7 +42,8 @@ void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, i
   return;
 }
 
-void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar) {
+void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector,
+                  int ar) {
   gd->offset_low = offset & 0xffff;
   gd->selector = selector;
   gd->dw_count = (ar >> 8) & 0xff;
