@@ -135,3 +135,13 @@ int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size) {
 
   return -1;
 }
+
+unsigned int memman_alloc_4k(struct MEMMAN *man, unsigned int size) {
+  size = (size + 0xfff) & 0xfffff000;
+  return memman_alloc(man, size);
+}
+
+int memman_free_4k(struct MEMMAN *man, unsigned int addr, unsigned int size) {
+  size = (size + 0xfff) & 0xfffff000;
+  return memman_free(man, addr, size);
+}
