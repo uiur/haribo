@@ -18,7 +18,7 @@ void HariMain(void) {
 
   struct SHTCTL *shtctl;
   struct SHEET *sht_back, *sht_mouse;
-  unsigned char *buf_back, buf_mouse[16 * 16];
+  unsigned char *buf_back, buf_mouse[256];
 
   init_gdtidt();
   init_pic();
@@ -45,7 +45,7 @@ void HariMain(void) {
   sht_back = sheet_alloc(shtctl);
   sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1);
   init_screen(buf_back, binfo->scrnx, binfo->scrny);
-  sheet_slide(shtctl, sht_back, 0, 0);
+  sheet_slide(sht_back, 0, 0);
 
   enable_mouse(&mdec);
 
@@ -55,16 +55,16 @@ void HariMain(void) {
 
   mx = (binfo->scrnx - 16) / 2;
   my = (binfo->scrny - 28 - 16) / 2;
-  sheet_slide(shtctl, sht_mouse, mx, my);
+  sheet_slide(sht_mouse, mx, my);
 
-  sheet_updown(shtctl, sht_back, 0);
-  sheet_updown(shtctl, sht_mouse, 1);
+  sheet_updown(sht_back, 0);
+  sheet_updown(sht_mouse, 1);
 
   sprintf(s, "memory %dMB, free: %dKB, %d %d", memtotal / (1024 * 1024),
-          memman_total(memman) / 1024, sht_mouse->bxsize, sht_mouse->bysize);
+          memman_total(memman) / 1024, sht_mouse->flags, sht_back->flags);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 
-  sheet_refresh(shtctl, sht_back, 0, 0, sht_back->bxsize, sht_back->bysize);
+  sheet_refresh(sht_back, 0, 0, sht_back->bxsize, sht_back->bysize);
 
   for (;;) {
     io_cli();
@@ -78,7 +78,7 @@ void HariMain(void) {
         sprintf(s, "%02X", i);
         boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
         putfonts8_asc(buf_back, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
-        sheet_refresh(shtctl, sht_back, 0, 16, 15, 31);
+        sheet_refresh(sht_back, 0, 16, 15, 31);
       } else if (fifo8_status(&mousefifo) != 0) {
         i = fifo8_get(&mousefifo);
         io_sti();
@@ -107,9 +107,9 @@ void HariMain(void) {
           boxfill8(buf_back, binfo->scrnx, COL8_008484, 32, 16, 32 + 8 * 12 - 1,
                    31);
           putfonts8_asc(buf_back, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
-          sheet_refresh(shtctl, sht_back, 32, 16, 32 + 8 * 12 - 1, 31);
+          sheet_refresh(sht_back, 32, 16, 32 + 8 * 12 - 1, 31);
 
-          sheet_slide(shtctl, sht_mouse, mx, my);
+          sheet_slide(sht_mouse, mx, my);
         }
       }
     }
