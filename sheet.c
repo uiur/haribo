@@ -1,21 +1,5 @@
 #include "bootpack.h"
 
-#define MAX_SHEETS 256
-
-struct SHEET {
-  unsigned char *buf;
-  int bxsize, bysize, vx0, vy0, col_inv, height, flags;
-};
-
-struct SHTCTL {
-  unsigned char *vram;
-  int xsize, ysize, top;
-  struct SHEET *sheets[MAX_SHEETS];
-  struct SHEET sheets0[MAX_SHEETS];
-};
-
-void sheet_refresh(struct SHTCTL *ctl);
-
 struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram,
                            int xsize, int ysize) {
   struct SHTCTL *ctl;
@@ -73,6 +57,8 @@ void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height) {
   if (height < -1) {
     height = -1;
   }
+
+  sht->height = height;
 
   if (old > height) {
     if (height >= 0) {
@@ -135,12 +121,58 @@ void sheet_refresh(struct SHTCTL *ctl) {
   return;
 }
 
+void sheet_refreshsub(struct SHTCTL *ctl, int x0, int y0, int x1, int y1) {
+  int h, bx, by, bx0, by0, bx1, by1;
+  unsigned char c;
+  struct SHEET *sheet;
+
+  for (h = 0; h <= ctl->top; h++) {
+    sheet = ctl->sheets[h];
+
+    bx0 = x0 - sheet->vx0;
+    by0 = y0 - sheet->vy0;
+    bx1 = x1 - sheet->vx0;
+    by1 = y1 - sheet->vy0;
+
+    if (bx0 < 0) {
+      bx0 = 0;
+    }
+
+    if (by0 < 0) {
+      by0 = 0;
+    }
+
+    if (bx1 > sheet->bxsize) {
+      bx1 = sheet->bxsize;
+    }
+
+    if (by1 > sheet->bysize) {
+      by1 = sheet->bysize;
+    }
+
+    for (by = by0; by < by1; by++) {
+      for (bx = bx0; bx < bx1; bx++) {
+        c = sheet->buf[by * sheet->bxsize + bx];
+        if (c != sheet->col_inv) {
+          ctl->vram[(by + sheet->vy0) * ctl->xsize + (bx + sheet->vx0)] = c;
+        }
+      }
+    }
+  }
+
+  return;
+}
+
 void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0) {
+  int old_vx0 = sht->vx0, old_vy0 = sht->vy0;
   sht->vx0 = vx0;
   sht->vy0 = vy0;
 
   if (sht->height >= 0) {
-    sheet_refresh(ctl);
+    sheet_refreshsub(ctl, old_vx0, old_vy0, old_vx0 + sht->bxsize,
+                     old_vy0 + sht->bysize);
+    sheet_refreshsub(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize,
+                     sht->vy0 + sht->bysize);
   }
 
   return;
