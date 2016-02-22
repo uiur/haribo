@@ -64,7 +64,7 @@ void HariMain(void) {
           memman_total(memman) / 1024, sht_mouse->bxsize, sht_mouse->bysize);
   putfonts8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 
-  sheet_refresh(shtctl);
+  sheet_refresh(shtctl, sht_back, 0, 0, sht_back->bxsize, sht_back->bysize);
 
   for (;;) {
     io_cli();
@@ -78,7 +78,7 @@ void HariMain(void) {
         sprintf(s, "%02X", i);
         boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
         putfonts8_asc(buf_back, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
-        sheet_refresh(shtctl);
+        sheet_refresh(shtctl, sht_back, 0, 16, 15, 31);
       } else if (fifo8_status(&mousefifo) != 0) {
         i = fifo8_get(&mousefifo);
         io_sti();
@@ -107,7 +107,7 @@ void HariMain(void) {
           boxfill8(buf_back, binfo->scrnx, COL8_008484, 32, 16, 32 + 8 * 12 - 1,
                    31);
           putfonts8_asc(buf_back, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
-          sheet_refreshsub(shtctl, 32, 16, 32 + 8 * 12 - 1, 31);
+          sheet_refresh(shtctl, sht_back, 32, 16, 32 + 8 * 12 - 1, 31);
 
           sheet_slide(shtctl, sht_mouse, mx, my);
         }
