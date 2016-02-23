@@ -114,6 +114,7 @@ void inthandler27(int *esp);
 void inthandler21(int *esp);
 void wait_KBC_sendready(void);
 void init_keyboard(struct FIFO32 *keyfifo);
+char code_to_ch(int code);
 #define PORT_KEYDAT 0x0060
 #define PORT_KEYCMD 0x0064
 

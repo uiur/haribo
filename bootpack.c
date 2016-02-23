@@ -85,7 +85,8 @@ void HariMain(void) {
       if (256 <= i && i < 512) {
         i -= 256;
         io_sti();
-        sprintf(s, "%02X", i);
+        s[0] = code_to_ch(i);
+        s[1] = '\0';
         putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s,
                           strlen(s));
       } else if (512 <= i && i <= 768) {
