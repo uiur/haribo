@@ -10,7 +10,10 @@ void HariMain(void) {
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
   struct SHTCTL *shtctl;
   struct SHEET *sht_back, *sht_mouse, *sht_win;
+  unsigned char timerbuf[8];
   unsigned char *buf_back, buf_mouse[256], *buf_win;
+  struct TIMER *timer;
+  struct FIFO8 timerfifo;
 
   init_gdtidt();
   init_pic();
@@ -27,6 +30,11 @@ void HariMain(void) {
   memman_init(memman);
   memman_free(memman, 0x00001000, 0x0009e000); /* 0x00001000 - 0x0009efff */
   memman_free(memman, 0x00400000, memtotal - 0x00400000);
+
+  fifo8_init(&timerfifo, sizeof(timerbuf), timerbuf);
+  timer = timer_alloc();
+  timer_init(timer, &timerfifo, 3);
+  timer_settime(timer, 3 * TIMER_SECOND);
 
   init_palette();
   shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
@@ -65,7 +73,9 @@ void HariMain(void) {
     sheet_refresh(sht_win, 40, 28, 120, 44);
 
     io_cli();
-    if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0) {
+    if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) +
+            fifo8_status(&timerfifo) ==
+        0) {
       io_sti();
     } else {
       if (fifo8_status(&keyfifo) != 0) {
@@ -117,6 +127,14 @@ void HariMain(void) {
           sheet_refresh(sht_back, 0, 0, 80, 16);
           sheet_slide(sht_mouse, mx, my);
         }
+      } else if (fifo8_status(&timerfifo) != 0) {
+        i = fifo8_get(&timerfifo);
+        io_sti();
+
+        sprintf(s, "%d sec", i);
+        boxfill8(buf_back, binfo->scrnx, COL8_000000, 0, 64, 79, 64 + 15);
+        putfonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, s);
+        sheet_refresh(sht_back, 0, 64, 80, 64 + 16);
       }
     }
   }
