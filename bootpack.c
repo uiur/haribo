@@ -4,7 +4,8 @@
 
 void HariMain(void) {
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
-  char s[40];
+  char s[40], str[40] = "";
+  char *key;
   int mx, my, i;
   unsigned int memtotal;
   struct MOUSE_DEC mdec;
@@ -85,10 +86,17 @@ void HariMain(void) {
       if (256 <= i && i < 512) {
         i -= 256;
         io_sti();
-        s[0] = code_to_ch(i);
-        s[1] = '\0';
-        putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s,
-                          strlen(s));
+        if (i < 0x58) {
+          key = code_to_key(i);
+          if (strlen(key) > 0) {
+            if (strcmp(key, "backspace") == 0) {
+              str[strlen(str) - 1] = '\0';
+            } else {
+              strncat(str, key, 1);
+            }
+          }
+          putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, str, 40);
+        }
       } else if (512 <= i && i <= 768) {
         io_sti();
         i -= 512;
