@@ -190,3 +190,6 @@ void inthandler20(int *esp);
 struct TIMER *timer_alloc(void);
 void timer_init(struct TIMER *timer, struct FIFO8 *fifo, unsigned int data);
 void timer_settime(struct TIMER *timer, unsigned int timeout);
+
+void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int font_color,
+                       int background_color, char *s, int length);

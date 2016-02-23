@@ -12,7 +12,7 @@ void HariMain(void) {
   struct SHEET *sht_back, *sht_mouse, *sht_win;
   unsigned char timerbuf[8];
   unsigned char *buf_back, buf_mouse[256], *buf_win;
-  struct TIMER *timer;
+  struct TIMER *timer, *timer10;
   struct FIFO8 timerfifo;
 
   init_gdtidt();
@@ -35,6 +35,10 @@ void HariMain(void) {
   timer = timer_alloc();
   timer_init(timer, &timerfifo, 3);
   timer_settime(timer, 3 * TIMER_SECOND);
+
+  timer10 = timer_alloc();
+  timer_init(timer10, &timerfifo, 10);
+  timer_settime(timer10, 10 * TIMER_SECOND);
 
   init_palette();
   shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
@@ -132,9 +136,7 @@ void HariMain(void) {
         io_sti();
 
         sprintf(s, "%d sec", i);
-        boxfill8(buf_back, binfo->scrnx, COL8_000000, 0, 64, 79, 64 + 15);
-        putfonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, s);
-        sheet_refresh(sht_back, 0, 64, 80, 64 + 16);
+        putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_000000, s, 10);
       }
     }
   }

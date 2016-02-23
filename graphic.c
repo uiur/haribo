@@ -173,3 +173,12 @@ void make_window8(unsigned char *buf, int xsize, int ysize, char *title) {
   }
   return;
 }
+
+void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int font_color,
+                       int background_color, char *s, int length) {
+  boxfill8(sht->buf, sht->bxsize, background_color, x, y, x + 8 * length,
+           y + 15);
+  putfonts8_asc(sht->buf, sht->bxsize, x, y, font_color, s);
+  sheet_refresh(sht, x, y, x + 8 * length, y + 16);
+  return;
+}
