@@ -24,14 +24,14 @@ void init_keyboard(void) {
   return;
 }
 
-struct FIFO8 keyfifo;
+struct FIFO32 keyfifo;
 
 void inthandler21(int *esp) {
   unsigned char data;
   io_out8(PIC0_OCW2, 0x61);
 
   data = io_in8(PORT_KEYDAT);
-  fifo8_put(&keyfifo, data);
+  fifo32_put(&keyfifo, data);
 
   return;
 }

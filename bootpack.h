@@ -29,14 +29,14 @@ void asm_inthandler2c(void);
 unsigned int memtest_sub(unsigned int start, unsigned int end);
 
 /* fifo.c */
-struct FIFO8 {
-  unsigned char *buf;
+struct FIFO32 {
+  int *buf;
   int p, q, size, free, flags;
 };
-void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);
-int fifo8_put(struct FIFO8 *fifo, unsigned char data);
-int fifo8_get(struct FIFO8 *fifo);
-int fifo8_status(struct FIFO8 *fifo);
+void fifo32_init(struct FIFO32 *fifo, int size, int *buf);
+int fifo32_put(struct FIFO32 *fifo, int data);
+int fifo32_get(struct FIFO32 *fifo);
+int ffifo32_tatus(struct FIFO32 *fifo);
 
 /* graphic.c */
 void init_palette(void);
@@ -114,7 +114,7 @@ void inthandler27(int *esp);
 void inthandler21(int *esp);
 void wait_KBC_sendready(void);
 void init_keyboard(void);
-extern struct FIFO8 keyfifo;
+extern struct FIFO32 keyfifo;
 #define PORT_KEYDAT 0x0060
 #define PORT_KEYCMD 0x0064
 
@@ -126,7 +126,7 @@ struct MOUSE_DEC {
 void inthandler2c(int *esp);
 void enable_mouse(struct MOUSE_DEC *mdec);
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
-extern struct FIFO8 mousefifo;
+extern struct FIFO32 mousefifo;
 
 /* memory.c */
 #define MEMMAN_FREES 4090 /* これで約32KB */
@@ -175,7 +175,7 @@ void sheet_free(struct SHEET *sht);
 
 struct TIMER {
   unsigned int timeout, flags;
-  struct FIFO8 *fifo;
+  struct FIFO32 *fifo;
   unsigned char data;
 };
 
@@ -188,7 +188,7 @@ extern struct TIMERCTL timerctl;
 void init_pit(void);
 void inthandler20(int *esp);
 struct TIMER *timer_alloc(void);
-void timer_init(struct TIMER *timer, struct FIFO8 *fifo, unsigned int data);
+void timer_init(struct TIMER *timer, struct FIFO32 *fifo, unsigned int data);
 void timer_settime(struct TIMER *timer, unsigned int timeout);
 
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int font_color,

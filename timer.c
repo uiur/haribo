@@ -35,7 +35,7 @@ struct TIMER *timer_alloc(void) {
   return 0;
 }
 
-void timer_init(struct TIMER *timer, struct FIFO8 *fifo, unsigned int data) {
+void timer_init(struct TIMER *timer, struct FIFO32 *fifo, unsigned int data) {
   timer->fifo = fifo;
   timer->data = data;
 
@@ -64,7 +64,7 @@ void inthandler20(int *esp) {
 
       if (timer->timeout == 0) {
         timer->flags = TIMER_FLAGS_ALLOC;
-        fifo8_put(timer->fifo, timer->data);
+        fifo32_put(timer->fifo, timer->data);
       }
     }
   }

@@ -57,14 +57,14 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char data) {
   return -1;
 }
 
-struct FIFO8 mousefifo;
+struct FIFO32 mousefifo;
 
 void inthandler2c(int *esp) {
   unsigned char data;
   io_out8(PIC1_OCW2, 0x64);
   io_out8(PIC0_OCW2, 0x62);
   data = io_in8(PORT_KEYDAT);
-  fifo8_put(&mousefifo, data);
+  fifo32_put(&mousefifo, data);
 
   return;
 }
