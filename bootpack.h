@@ -36,7 +36,7 @@ struct FIFO32 {
 void fifo32_init(struct FIFO32 *fifo, int size, int *buf);
 int fifo32_put(struct FIFO32 *fifo, int data);
 int fifo32_get(struct FIFO32 *fifo);
-int ffifo32_tatus(struct FIFO32 *fifo);
+int fifo32_status(struct FIFO32 *fifo);
 
 /* graphic.c */
 void init_palette(void);
@@ -113,8 +113,7 @@ void inthandler27(int *esp);
 /* keyboard.c */
 void inthandler21(int *esp);
 void wait_KBC_sendready(void);
-void init_keyboard(void);
-extern struct FIFO32 keyfifo;
+void init_keyboard(struct FIFO32 *keyfifo);
 #define PORT_KEYDAT 0x0060
 #define PORT_KEYCMD 0x0064
 
@@ -123,10 +122,9 @@ struct MOUSE_DEC {
   unsigned char buf[3], phase;
   int x, y, btn;
 };
-void inthandler2c(int *esp);
-void enable_mouse(struct MOUSE_DEC *mdec);
+void enable_mouse(struct FIFO32 *fifo, struct MOUSE_DEC *mdec);
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
-extern struct FIFO32 mousefifo;
+void inthandler2c(int *esp);
 
 /* memory.c */
 #define MEMMAN_FREES 4090 /* これで約32KB */

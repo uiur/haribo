@@ -15,7 +15,11 @@ void wait_KBC_sendready(void) {
   return;
 }
 
-void init_keyboard(void) {
+struct FIFO32 *keyfifo;
+
+void init_keyboard(struct FIFO32 *fifo) {
+  keyfifo = fifo;
+
   wait_KBC_sendready();
   io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE);
   wait_KBC_sendready();
@@ -24,14 +28,12 @@ void init_keyboard(void) {
   return;
 }
 
-struct FIFO32 keyfifo;
-
 void inthandler21(int *esp) {
-  unsigned char data;
+  int data;
   io_out8(PIC0_OCW2, 0x61);
 
   data = io_in8(PORT_KEYDAT);
-  fifo32_put(&keyfifo, data);
+  fifo32_put(keyfifo, data + 256);
 
   return;
 }

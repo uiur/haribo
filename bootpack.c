@@ -5,7 +5,6 @@
 void HariMain(void) {
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
   char s[40];
-  int keybuf[32], mousebuf[128], timerbuf[8];
   int mx, my, i;
   unsigned int memtotal;
   struct MOUSE_DEC mdec;
@@ -14,31 +13,31 @@ void HariMain(void) {
   struct SHEET *sht_back, *sht_mouse, *sht_win;
   unsigned char *buf_back, buf_mouse[256], *buf_win;
   struct TIMER *timer, *timer10;
-  struct FIFO32 timerfifo;
+
+  struct FIFO32 fifo;
+  int fifobuf[256];
 
   init_gdtidt();
   init_pic();
   io_sti(); /* IDT/PICの初期化が終わったのでCPUの割り込み禁止を解除 */
-  fifo32_init(&keyfifo, 32, keybuf);
-  fifo32_init(&mousefifo, 128, mousebuf);
+  fifo32_init(&fifo, sizeof(fifobuf), fifobuf);
   init_pit();
   io_out8(PIC0_IMR, 0xf8); /* PITとPIC1とキーボードを許可(11111000) */
   io_out8(PIC1_IMR, 0xef); /* マウスを許可(11101111) */
 
-  init_keyboard();
-  enable_mouse(&mdec);
+  init_keyboard(&fifo);
+  enable_mouse(&fifo, &mdec);
   memtotal = memtest(0x00400000, 0xbfffffff);
   memman_init(memman);
   memman_free(memman, 0x00001000, 0x0009e000); /* 0x00001000 - 0x0009efff */
   memman_free(memman, 0x00400000, memtotal - 0x00400000);
 
-  fifo32_init(&timerfifo, sizeof(timerbuf), timerbuf);
   timer = timer_alloc();
-  timer_init(timer, &timerfifo, 3);
+  timer_init(timer, &fifo, 3);
   timer_settime(timer, 3 * TIMER_SECOND);
 
   timer10 = timer_alloc();
-  timer_init(timer10, &timerfifo, 10);
+  timer_init(timer10, &fifo, 10);
   timer_settime(timer10, 10 * TIMER_SECOND);
 
   init_palette();
@@ -78,20 +77,20 @@ void HariMain(void) {
     putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, strlen(s));
 
     io_cli();
-    if (fifo32_status(&keyfifo) + fifo32_status(&mousefifo) +
-            fifo32_status(&timerfifo) ==
-        0) {
+    if (fifo32_status(&fifo) == 0) {
       io_sti();
     } else {
-      if (fifo32_status(&keyfifo) != 0) {
-        i = fifo32_get(&keyfifo);
+      i = fifo32_get(&fifo);
+
+      if (256 <= i && i < 512) {
+        i -= 256;
         io_sti();
         sprintf(s, "%02X", i);
         putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s,
                           strlen(s));
-      } else if (fifo32_status(&mousefifo) != 0) {
-        i = fifo32_get(&mousefifo);
+      } else if (512 <= i && i <= 768) {
         io_sti();
+        i -= 512;
         if (mouse_decode(&mdec, i) != 0) {
           /* マウスカーソルの移動 */
           mx += mdec.x;
@@ -113,8 +112,7 @@ void HariMain(void) {
                             strlen(s));
           sheet_slide(sht_mouse, mx, my);
         }
-      } else if (fifo32_status(&timerfifo) != 0) {
-        i = fifo32_get(&timerfifo);
+      } else if (0 < i && i < 100) {
         io_sti();
 
         sprintf(s, "%d sec", i);
