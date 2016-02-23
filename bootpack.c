@@ -1,5 +1,6 @@
 #include "bootpack.h"
 #include <stdio.h>
+#include <string.h>
 
 void HariMain(void) {
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
@@ -63,18 +64,18 @@ void HariMain(void) {
   sheet_updown(sht_back, 0);
   sheet_updown(sht_win, 1);
   sheet_updown(sht_mouse, 2);
+
   sprintf(s, "(%3d, %3d)", mx, my);
-  putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
+  putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, strlen(s));
+
   sprintf(s, "memory %dMB   free : %dKB", memtotal / (1024 * 1024),
           memman_total(memman) / 1024);
-  putfonts8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
+  putfonts8_asc_sht(sht_back, 0, 32, COL8_FFFFFF, COL8_008484, s, strlen(s));
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
 
   for (;;) {
     sprintf(s, "%010d", timerctl.count);
-    boxfill8(buf_win, 160, COL8_C6C6C6, 40, 28, 119, 43);
-    putfonts8_asc(buf_win, 160, 40, 28, COL8_000000, s);
-    sheet_refresh(sht_win, 40, 28, 120, 44);
+    putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, strlen(s));
 
     io_cli();
     if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) +
@@ -86,28 +87,12 @@ void HariMain(void) {
         i = fifo8_get(&keyfifo);
         io_sti();
         sprintf(s, "%02X", i);
-        boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
-        putfonts8_asc(buf_back, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
-        sheet_refresh(sht_back, 0, 16, 16, 32);
+        putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s,
+                          strlen(s));
       } else if (fifo8_status(&mousefifo) != 0) {
         i = fifo8_get(&mousefifo);
         io_sti();
         if (mouse_decode(&mdec, i) != 0) {
-          /* データが3バイト揃ったので表示 */
-          sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
-          if ((mdec.btn & 0x01) != 0) {
-            s[1] = 'L';
-          }
-          if ((mdec.btn & 0x02) != 0) {
-            s[3] = 'R';
-          }
-          if ((mdec.btn & 0x04) != 0) {
-            s[2] = 'C';
-          }
-          boxfill8(buf_back, binfo->scrnx, COL8_008484, 32, 16, 32 + 15 * 8 - 1,
-                   31);
-          putfonts8_asc(buf_back, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
-          sheet_refresh(sht_back, 32, 16, 32 + 15 * 8, 32);
           /* マウスカーソルの移動 */
           mx += mdec.x;
           my += mdec.y;
@@ -124,11 +109,8 @@ void HariMain(void) {
             my = binfo->scrny - 1;
           }
           sprintf(s, "(%3d, %3d)", mx, my);
-          boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 0, 79,
-                   15); /* 座標消す */
-          putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF,
-                        s); /* 座標書く */
-          sheet_refresh(sht_back, 0, 0, 80, 16);
+          putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s,
+                            strlen(s));
           sheet_slide(sht_mouse, mx, my);
         }
       } else if (fifo8_status(&timerfifo) != 0) {
@@ -136,7 +118,8 @@ void HariMain(void) {
         io_sti();
 
         sprintf(s, "%d sec", i);
-        putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_000000, s, 10);
+        putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_000000, s,
+                          strlen(s));
       }
     }
   }
