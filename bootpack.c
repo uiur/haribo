@@ -10,7 +10,7 @@ struct MOUSE_DEC mdec;
 void HariMain(void) {
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
 
-  int i, mx, my;
+  int i, mx, my, count = 0;
   char s[40], keybuf[32], mousebuf[128];
 
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
@@ -57,11 +57,11 @@ void HariMain(void) {
   my = (binfo->scrny - 28 - 16) / 2;
   sheet_slide(sht_mouse, mx, my);
 
-  buf_win = (unsigned char *)memman_alloc_4k(memman, 100 * 100);
-  make_window8(buf_win, 100, 100, "hello");
+  buf_win = (unsigned char *)memman_alloc_4k(memman, 160 * 52);
+  make_window8(buf_win, 160, 52, "hello");
 
   sht_win = sheet_alloc(shtctl);
-  sheet_setbuf(sht_win, buf_win, 100, 100, -1);
+  sheet_setbuf(sht_win, buf_win, 160, 52, -1);
   sheet_slide(sht_win, 40, 40);
 
   sheet_updown(sht_back, 0);
@@ -75,10 +75,15 @@ void HariMain(void) {
   sheet_refresh(sht_back, 0, 0, sht_back->bxsize, sht_back->bysize);
 
   for (;;) {
-    io_cli();
+    count++;
+
+    sprintf(s, "%010d", count);
+    boxfill8(buf_win, 160, COL8_C6C6C6, 40, 28, 119, 43);
+    putfonts8_asc(buf_win, 160, 40, 28, COL8_000000, s);
+    sheet_refresh(sht_win, 0, 0, sht_win->bxsize, sht_win->bysize);
 
     if ((fifo8_status(&keyfifo) + fifo8_status(&mousefifo)) == 0) {
-      io_stihlt();
+      io_sti();
     } else {
       if (fifo8_status(&keyfifo) != 0) {
         i = fifo8_get(&keyfifo);
