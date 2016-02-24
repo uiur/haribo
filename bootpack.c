@@ -177,7 +177,25 @@ void HariMain(void) {
 }
 
 void task_b_main(void) {
+  struct FIFO32 fifo;
+  struct TIMER *timer_ts;
+  int i, buf[128];
+
+  fifo32_init(&fifo, sizeof(buf), buf);
+  timer_ts = timer_alloc();
+  timer_init(timer_ts, &fifo, 2);
+  timer_settime(timer_ts, 2 * TIMER_SECOND);
+
   for (;;) {
-    io_hlt();
+    io_cli();
+    if (fifo32_status(&fifo) == 0) {
+      io_stihlt();
+    } else {
+      i = fifo32_get(&fifo);
+
+      if (i == 2) {
+        farjmp(0, 3 << 3);
+      }
+    }
   }
 }
