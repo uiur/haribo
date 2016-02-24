@@ -2,13 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 
-struct TSS32 {
-  int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
-  int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
-  int es, cs, ss, ds, fs, gs;
-  int ldtr, iomap;
-};
-
 void task_b_main(void);
 
 void HariMain(void) {
@@ -113,6 +106,8 @@ void HariMain(void) {
   tss_b.fs = 1 * 8;
   tss_b.gs = 1 * 8;
 
+  mt_init();
+
   for (;;) {
     sprintf(s, "%010d", timerctl.count);
     putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, strlen(s));
@@ -167,35 +162,13 @@ void HariMain(void) {
         sprintf(s, "%d sec", i);
         putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_000000, s,
                           strlen(s));
-
-        if (i == 3) {
-          farjmp(0, 4 << 3);
-        }
       }
     }
   }
 }
 
 void task_b_main(void) {
-  struct FIFO32 fifo;
-  struct TIMER *timer_ts;
-  int i, buf[128];
-
-  fifo32_init(&fifo, sizeof(buf), buf);
-  timer_ts = timer_alloc();
-  timer_init(timer_ts, &fifo, 2);
-  timer_settime(timer_ts, 2 * TIMER_SECOND);
-
   for (;;) {
-    io_cli();
-    if (fifo32_status(&fifo) == 0) {
-      io_stihlt();
-    } else {
-      i = fifo32_get(&fifo);
-
-      if (i == 2) {
-        farjmp(0, 3 << 3);
-      }
-    }
+    io_hlt();
   }
 }
