@@ -197,6 +197,9 @@ void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int font_color,
                        int background_color, const char *s, int length);
 
 /* mtask.c */
+#define MAX_TASKS 1000
+#define TASK_GDT0 3
+
 struct TSS32 {
   int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
   int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
@@ -204,5 +207,19 @@ struct TSS32 {
   int ldtr, iomap;
 };
 
-void mt_init(void);
-void mt_taskswitch(void);
+struct TASK {
+  int sel, flags;
+  struct TSS32 tss;
+};
+
+struct TASKCTL {
+  int running;
+  int now;
+  struct TASK *tasks[MAX_TASKS];
+  struct TASK tasks0[MAX_TASKS];
+};
+
+struct TASK *task_init(struct MEMMAN *memman);
+struct TASK *task_alloc(void);
+void task_run(struct TASK *task);
+void task_switch(void);
